@@ -1,0 +1,126 @@
+/* General styles */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  /* Container styles */
+  .signin {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    text-align: center;
+  }
+  
+  .signinHeading {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+    font-weight: bold;
+  }
+  
+  /* Form styles */
+  .signinForm {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center align items */
+  }
+  
+  .signinForm label {
+    font-size: 14px;
+    margin-bottom: 5px;
+    color: #555;
+    align-self: flex-start; /* Align labels to the left */
+  }
+  
+  .signinForm input {
+    padding: 10px;
+    margin-bottom: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 100%; /* Make input fields take full width */
+  }
+  
+  .signinForm input:focus {
+    border-color: #007BFF;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.25);
+  }
+  
+  .signinForm button {
+    padding: 10px;
+    background: #007BFF;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s;
+    width: 100%; /* Make button take full width */
+    margin-top: 10px;
+  }
+  
+  .signinForm button:hover {
+    background: #0056b3;
+  }
+  
+  /* Error message styles */
+  .error {
+    color: red;
+    font-size: 12px;
+    margin-bottom: 10px;
+    align-self: flex-start; /* Left align error messages */
+  }
+  
+  /* Forgot Password link */
+  .forgot-password {
+    align-self: flex-end; /* Right align Forgot Password link */
+    font-size: 12px;
+    color: #007BFF;
+    text-decoration: none;
+  }
+  
+  .forgot-password:hover {
+    text-decoration: underline;
+  }
+  
+  /* Center align SignIn component */
+  .oauthsignIn {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  
+  /* OR separator */
+  .or-separator {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 10px 0;
+    color: #888;
+  }
+  
+  .or-separator::before,
+  .or-separator::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .or-separator:not(:empty)::before {
+    margin-right: 0.25em;
+  }
+  
+  .or-separator:not(:empty)::after {
+    margin-left: 0.25em;
+  }
+  
