@@ -9,6 +9,7 @@ export const Oauth = () => {
 
   const handleGoogleSignIn = async (response) => {
     try {
+      console.log(response)
       const googleResponse = await axios.post('http://localhost:4000/api/v.0.0/oauth/callback', {
         data:{"accessToken":response.credential}
       });

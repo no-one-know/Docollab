@@ -5,6 +5,7 @@ const { OAuth2Client }=require('google-auth-library');
 const venv=require("dotenv")
 const connectDb=require("./Dbconnection")
 const bcrypt=require('bcrypt')
+const jwt=require('jsonwebtoken')
 const app=express()
 const oauth2Client=new OAuth2Client(process.env.CLIENTID,process.env.CLIENTSECRET)
 const User=require('./models/User')
@@ -37,8 +38,39 @@ const createNewUser=async (payload)=>{
             name:payload.name
         })
         const savedUser=await newUser.save()
-        console.log("User info saved success fully")
+        console.log("User info saved successfully")
         return savedUser
+    }
+    catch(error){
+        console.log(error)
+        return undefined
+    }
+}
+
+const getAuthToken=(user)=>{
+    try{
+        const currentTime=new Date()
+        const currentTimeStamp=currentTime.getTime()
+        const cookiePayload={
+            "name":user.name,
+            "email":user.email,
+            "picture":user.picture,
+            "userId":user.userId,
+            "createdAt":currentTimeStamp
+        }
+        return jwt.sign(cookiePayload,process.env.SERVERSECRET)
+    }
+    catch(error){
+        console.log(error)
+        return undefined
+    }
+}
+
+const setCookie= (user)=>{
+    try{
+        const authToken=getAuthToken(user)
+        const host="http://localhost:4000"
+        return `__${host}-authToken=${authToken};SameSite=None;Secure;Path=/;Partitioned;HttpOnly;Max-Age=5184000`
     }
     catch(error){
         console.log(error)
@@ -48,14 +80,14 @@ const createNewUser=async (payload)=>{
 
 app.post("/api/v.0.0/oauth/callback",async (req,res)=>{
     try{
-        const accessToken=req.body.data.accessToken
+        const accessToken=req.body.accessToken
         const ticket=await oauth2Client.verifyIdToken({
             idToken:accessToken,
             audience:process.env.CLIENTID
         })
         const payload=ticket.getPayload()
         console.log(payload)
-        user=await findUserbyEmail(payload.email)
+        let user=await findUserbyEmail(payload.email)
         if(user===undefined){
             user=await createNewUser(payload)
         }
@@ -65,7 +97,11 @@ app.post("/api/v.0.0/oauth/callback",async (req,res)=>{
                 "userDetails":{}
             })
         }
-        return res.send({
+        const cookie=setCookie(user)
+        return res.status(200).header({
+            'Set-Cookie':cookie
+        }) 
+        .send({
             "message":"request processed successfully",
             "userDetails":{
                 "name":payload.name,
@@ -76,10 +112,10 @@ app.post("/api/v.0.0/oauth/callback",async (req,res)=>{
     }
     catch(error){
         console.log(error)
-        res.send({
+        res.status(500).send({
             "message":"error occured while parsing the access token",
             "error":`${error}`
-        })
+        }) 
     }
 })
 
@@ -128,7 +164,7 @@ app.listen(port,async ()=>{
     console.log("App is running on port ", port)
     try{
         console.log("Connecting to mongodb")
-        await connectDb
+        await connectDb()
         console.log("Connection successful")
     }
     catch(error){
