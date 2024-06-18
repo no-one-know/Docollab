@@ -20,7 +20,7 @@ export const Oauth = () => {
     }
   };
   return (
-    <GoogleOAuthProvider clientId={process.env.REACT_APP_CLIENTID}>
+    <GoogleOAuthProvider clientId={process.env.REACT_APP_BASILCLIENTID}>
       <div>
         {error && <p>{error}</p>}
         <GoogleLogin

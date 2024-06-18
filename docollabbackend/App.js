@@ -1,17 +1,78 @@
 const express=require("express")
 const cors=require("cors")
+const nodemailer=require("nodemailer")
 const {v4:uuidv4}=require('uuid')
 const { OAuth2Client }=require('google-auth-library');
 const venv=require("dotenv")
 const connectDb=require("./Dbconnection")
 const bcrypt=require('bcrypt')
 const jwt=require('jsonwebtoken')
+const WebSocket=require('ws')
+const http=require('http')
 const app=express()
+const server=http.createServer(app)
+const wss=new WebSocket.Server({server:server})
 const oauth2Client=new OAuth2Client(process.env.CLIENTID,process.env.CLIENTSECRET)
 const User=require('./models/User')
+const port=process.env.PORT||4000
+const {OpenAI}=require('openai');
+const { time } = require("console");
+const openai=new OpenAI({
+    apiKey:process.env.OPENAI
+})
 app.use(express.json())
 app.use(cors())
 venv.config()
+
+wss.on('connection', (ws) => {
+    ws.on('message', (message) => {
+      const questions=JSON.parse(message).questions
+      questions.forEach(async (question,index) => {
+        try{
+            const response= await openai.chat.completions.create({
+                messages:[{role:'user',content:question}],
+                model:'gpt-3.5-turbo'
+            })
+            ws.send(JSON.stringify({"question":question,"answer":response.choices[0].message.content}))
+        }
+        catch(error){
+            ws.send(JSON.stringify({"question":question,"answer":error}))
+        }
+      });
+    });
+    ws.on('close', () => {
+      console.log('Client disconnected');
+    });
+  });
+
+const sendMail=async (email)=>{
+    try{
+        const transporter=nodemailer.createTransport({
+            service: "gmail",
+            host: "smtp.gmail.com",
+            port: 587,
+            secure: false,
+            auth:{
+                user:process.env.EMAIL_USER__,
+                pass:process.env.EMAIL_PASS__
+            }
+        })
+        const info=await transporter.sendMail({
+            from:{
+                name:"DocCollab",
+                address:process.env.EMAIL_USER__,
+            },
+            to:email,
+            subject:"Verify Email",
+            html:"This is mail for testing"
+        })
+        return info
+    }
+    catch(error){
+        console.log(error)
+        return undefined
+    }
+}
 
 const findUserbyEmail=async (email)=>{
     try{
@@ -139,17 +200,18 @@ app.post("/api/v.0.0/signin",(req,res)=>{
     }
 })
 
-app.post("/api/v.0.0/signup",(req,res)=>{
+app.post("/api/v.0.0/signup",async (req,res)=>{
     try{
-        body=req.body
-        email=body.email
+        const body=req.body
+        const email=body.email
         // check if there exist already a email 
-        doc=client.db(databases.docShare).collection(collections.user).find({'email':email})
-        console.log(doc)
-        if(doc) return res.send({
+        const user= await User.findOne({'email':email})
+        console.log(user)
+        if(user) return res.send({
             "message":"user already exist with this email please login or user another email"
         })
-        return res.send(req.body)
+        const info=await sendMail(email)
+        return res.send({"info":info})
     }
     catch(error){
         res.send({
@@ -159,8 +221,29 @@ app.post("/api/v.0.0/signup",(req,res)=>{
     }
 })
 
-const port=process.env.PORT||3000
-app.listen(port,async ()=>{
+app.post("/api/v.0.0/setpassword",(req,res)=>{
+    try{
+        data=req.body
+        password=data.password
+        confirmPassword=data.confirmPassword
+        if(password!=confirmPassword){
+            return res.status(400).send({"message":"password and confirmPassword is not same"})
+        }
+        // save the password
+        return res.send({
+            "message":"password reset successfully, login to continue"
+        })
+    }
+    catch(error){
+        console.log(error)
+        res.send({
+            "message":"error occured while resetting password",
+            "error":`${error}`
+        })
+    }
+})
+
+server.listen(port,async ()=>{
     console.log("App is running on port ", port)
     try{
         console.log("Connecting to mongodb")

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './signin.css'
 import { Oauth } from "./oauth";
 import axios from "axios";
+import { Link } from 'react-router-dom';
 
 export const SignIn = () => {
     const [email, setEmail] = useState("");
@@ -60,7 +61,7 @@ export const SignIn = () => {
                 <label htmlFor="password">Password</label>
                 <input type="password" id="password" onChange={handlePassword} value={password} required placeholder="a@49210fnvncj" />
                 {passwordHelper && <p className="error">{passwordHelper}</p>}
-                <a href="#" className="forgot-password">Forgot Password</a>
+                <Link to="/forgotpassword" className="forgot-password">Forgot Password</Link>
                 <button onClick={handleSubmit}>SignIn</button>
             </div>
             <div className="or-separator">OR</div>
